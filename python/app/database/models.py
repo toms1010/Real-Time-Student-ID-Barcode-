@@ -127,8 +127,18 @@ class ScanLog:
         known = {f.name for f in fields(cls)}
         data = {k: v for k, v in row.items() if k in known}
         student_fields = {f.name for f in fields(Student)}
-        nested = {k: v for k, v in data.items() if k not in known and k in student_fields}
-        if nested:
+        # The student's own columns must be read from the raw `row`, not from
+        # `data`: `data` has already been filtered down to `known`, so a `k not
+        # in known` test against it can never match. Doing that silently left
+        # `student` as None and the scan history showed "Unknown" for every
+        # verified scan.
+        nested = {k: v for k, v in row.items() if k not in known and k in student_fields}
+        # The join aliases students.student_id to `student_number` so it does
+        # not collide with the scan_logs foreign key of the same name, so the
+        # nested object has to be given its own number explicitly.
+        student_number = data.get("student_number")
+        if nested and student_number:
+            nested["student_id"] = student_number
             data["student"] = Student(**nested)
         else:
             data.pop("student", None)

@@ -368,3 +368,51 @@ class TestApiRoutes:
         students.create(payload(course="BS Nursing"))
         response = client.get("/api/students/courses", headers=auth_headers["cashier"])
         assert "BS Nursing" in response.json()
+
+
+class TestScanStudentJoin:
+    """The scan log must name the student, not just their ID.
+
+    Regression: `ScanLog.from_row` derived the nested student from the already
+    key-filtered dict, so the `k not in known` test could never match, the
+    student was silently dropped, and the scan history rendered "Unknown" in
+    the Student column for every verified scan.
+    """
+
+    def test_a_verified_scan_carries_the_student_record(
+        self, client, cashier_headers, demo_students
+    ):
+        student = demo_students[0]
+        created = client.post(
+            "/api/scans",
+            json={"barcode": student.student_id, "source": "manual"},
+            headers=cashier_headers,
+        )
+        assert created.status_code == 200, created.text
+        assert created.json()["student"]["name"] == student.full_name
+
+        history = client.get("/api/scans?limit=5", headers=cashier_headers)
+        assert history.status_code == 200
+        rows = history.json()["items"]
+        assert rows, "the scan was not written to scan_logs"
+        top = rows[0]
+        assert top["student_number"] == student.student_id
+        assert top["student"] is not None, "the joined student was dropped"
+        assert top["student"]["name"] == student.full_name
+        assert top["student"]["student_id"] == student.student_id
+        assert top["student"]["course"] == student.course
+        assert top["student"]["status"] == student.status
+
+    def test_an_unregistered_barcode_has_no_student(
+        self, client, cashier_headers, demo_students
+    ):
+        """A miss must stay a miss - no placeholder record is invented."""
+        client.post(
+            "/api/scans",
+            json={"barcode": "2026-999999", "source": "manual"},
+            headers=cashier_headers,
+        )
+        history = client.get("/api/scans?result=UNKNOWN_ID&limit=5", headers=cashier_headers)
+        assert history.status_code == 200
+        assert history.json()["items"], "the unknown scan was not logged"
+        assert history.json()["items"][0]["student"] is None
