@@ -19,6 +19,7 @@ from app.services.scan_workflow import (
     actions_for,
     assert_table_is_consistent,
     coerce_state,
+    definition as definition_for_state,
     describe_states,
     is_allowed,
 )
@@ -439,15 +440,19 @@ class TestWorkflowInvariants:
         assert "IDLE" in str(caught.value)
         assert "Proceed" in str(caught.value)
 
-    def test_a_rejected_charge_never_says_it_succeeded(self, workflow):
-        """A 409 must not read like a success - that is how a cashier is misled."""
+    def test_a_rejected_charge_never_repeats_the_success_banner(self, workflow):
+        """A 409 must not echo the display copy - that is how a cashier is misled.
+
+        From SUCCESS the state's message is "Transaction successful."; putting
+        that in an error body tells the operator the charge worked.
+        """
         reach(workflow, ScanState.SUCCESS)
         workflow.transaction_succeeded(FakeTransaction("TXN-000042"))
+        display_copy = definition_for_state(ScanState.SUCCESS).message
         with pytest.raises(WorkflowConflictError) as caught:
             workflow.begin_transaction()
-        message = str(caught.value).lower()
-        assert "successful" not in message
-        assert "success" not in message
+        assert display_copy.lower() not in str(caught.value).lower()
+        assert "Proceed" in str(caught.value)
 
     def test_a_second_charge_is_refused_until_the_cashier_acknowledges(self, workflow):
         reach(workflow, ScanState.READY_FOR_TRANSACTION)
