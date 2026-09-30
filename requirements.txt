@@ -1,0 +1,51 @@
+# ---------------------------------------------------------------------------
+# Runtime dependencies for the Python side of the system.
+#
+# Install into a virtual environment:
+#   python3 -m venv .venv
+#   source .venv/bin/activate
+#   pip install -r requirements.txt
+#
+# Version policy
+# --------------
+# Constraints are ranges with an upper major bound rather than exact pins so
+# that a wheel exists for every Python the project supports (3.11 - 3.14).
+# requirements-lock.txt records the exact versions this project was verified
+# with; use it for a reproducible deployment:
+#
+#   pip install -r requirements-lock.txt
+#
+# Every package is available as a wheel from PyPI (or, for zxing-cpp on an
+# interpreter without a prebuilt wheel, builds from its sdist with cmake +
+# a C++17 compiler).  Nothing needs root, the internet, or a cloud service at
+# runtime.
+# ---------------------------------------------------------------------------
+
+# --- Web / API layer --------------------------------------------------------
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.34,<1.0      # includes httptools/uvloop for lower latency
+pydantic>=2.10,<3.0
+email-validator>=2.2               # backs pydantic's EmailStr field
+python-multipart>=0.0.20         # required for photo uploads / multipart forms
+PyYAML>=6.0.2                    # config/config.yaml loader
+
+# --- Security ---------------------------------------------------------------
+argon2-cffi>=23.1                # Argon2id password hashing (no native build needed)
+
+# --- Computer vision (Python-side capture / fallback decoder) ---------------
+# zxing-cpp is the same decoder library the C++ scanner links against
+# (ZXing C++).  It is a real decoder: there is no simulated barcode output
+# anywhere in this project.
+zxing-cpp>=2.3
+opencv-python-headless>=4.10     # frame capture, preprocessing, MJPEG encoding
+numpy>=1.26                      # required by opencv-python and zxing-cpp
+
+# --- Reporting --------------------------------------------------------------
+pandas>=2.2
+openpyxl>=3.1                     # XLSX export
+Pillow>=10.4                      # photo validation, sample ID card rendering, PDF export
+
+# --- Testing ----------------------------------------------------------------
+pytest>=8.3
+pytest-cov>=6.0
+httpx>=0.28                       # FastAPI TestClient transport

@@ -1,0 +1,115 @@
+# ===========================================================================
+#  Real-Time Student ID Barcode Detection System - configuration
+#
+#  This file is read by BOTH halves of the system:
+#    * python/app/utils/config.py  (FastAPI service, reports, vision fallback)
+#    * cpp/src/utils/Config.cpp    (C++ scanner)
+#
+#  Precedence:  these values  <  environment variables  <  .env
+#  Copy to `config/config.yaml` to customise.  Every key is documented in
+#  docs/installation.md ("Configuration reference").
+#  Relative paths are resolved against the repository root.
+# ===========================================================================
+
+application:
+  name: "Student ID Barcode Detection System"
+  environment: "development"      # development | testing | production
+  version: "1.0.0"
+  log_level: "INFO"               # DEBUG | INFO | WARNING | ERROR
+  log_format: "text"              # text | json
+  # log_file: "logs/app.log"      # uncomment to also write a rotating log file
+
+camera:
+  device_index: 0                 # 0 = first /dev/video* device
+  width: 1280
+  height: 720
+  fps: 30
+  source: ""                      # blank = device index; else file path or rtsp:// URL
+  warmup_frames: 5                # frames discarded while auto-exposure settles
+  frame_timeout_ms: 2000          # capture read timeout before CAMERA_DISCONNECTED
+  # Region of interest, as fractions of the frame (the drawn scan window).
+  roi_x: 0.10
+  roi_y: 0.25
+  roi_w: 0.80
+  roi_h: 0.50
+  flip: false                     # true for mirrored front-facing webcams
+
+scanner:
+  cooldown_ms: 2000               # suppress the same barcode for this long
+  confidence_threshold: 0.80      # minimum decoder confidence accepted
+  barcode_timeout_ms: 3000        # keep retrying a held card for this long
+  detect_roi: true                # restrict decoding to the scan region
+  max_tracked_barcodes: 512       # LRU bound for the cooldown map
+  decode_attempts: 2              # original frame + one preprocessed variant
+  # Symbologies accepted for a student lookup (ADR-003).  Anything else is
+  # recorded as UNSUPPORTED_FORMAT and never reaches the database.
+  allowed_formats: "Code128,Code39,EAN13,EAN8,UPCA,UPCE,ITF,QRCode,DataMatrix"
+  # A decoded payload must match this expression to be looked up.
+  payload_pattern: "^[A-Za-z0-9][A-Za-z0-9_-]{2,63}$"
+  stream_source: "python"         # python | cpp | file  (who owns the camera)
+  file_source: "tests/sample_images/scan_sequence.mp4"
+  duplicate_log_per_cooldown: true
+
+preprocessing:
+  enable_grayscale: true
+  enable_roi_crop: true
+  target_width: 960               # frames wider than this are scaled down
+  enable_clahe: true              # local contrast; see triggers below
+  clahe_clip_limit: 2.0
+  clahe_dark_trigger: 0.45        # apply CLAHE only when mean luminance < this
+  enable_denoise: true
+  denoise_h: 5.0
+  denoise_trigger: 0.02           # apply denoise only when noise energy > this
+  # Adaptive thresholding destroys the Code 128 quiet zone on a well-lit frame,
+  # so it is off by default and additionally gated on bimodality (ADR-007).
+  enable_adaptive_threshold: false
+  adaptive_block_size: 31
+  adaptive_c: 5.0
+  adaptive_bimodal_threshold: 0.55
+  enable_sharpen: false
+  sharpen_amount: 0.6
+
+api:
+  host: "127.0.0.1"               # loopback only - do not expose this service
+  port: 8000
+  base_url: "http://127.0.0.1:8000"
+  timeout_ms: 3000
+  retries: 2
+  retry_backoff_ms: 120
+  cors_origins: ""                # blank = same-origin only
+
+database:
+  path: "database/student_id_system.db"
+  busy_timeout_ms: 5000
+  enable_wal: true
+
+audio:
+  enabled: true
+  volume: 0.8                     # 0.0 - 1.0
+  player: "auto"                  # auto | aplay | paplay | ffplay | none
+  assets_dir: "assets/sounds"     # scan_detected.wav, verification_success.wav, ...
+
+security:
+  require_login: true
+  session_ttl_minutes: 720
+  # session_secret: ""            # MUST come from the environment (SESSION_SECRET)
+  max_login_attempts: 5
+  login_lockout_seconds: 60
+  max_upload_bytes: 2097152       # 2 MiB
+  allowed_photo_extensions: ".jpg,.jpeg,.png"
+  cookie_name: "sidb_session"
+  cookie_secure: false            # true only behind HTTPS
+
+uploads:
+  photo_dir: "uploads/photos"
+  max_photo_dimension: 1600
+
+reports:
+  output_dir: "exports"
+  timezone: "Asia/Manila"
+  default_page_size: 50
+  max_page_size: 500
+
+web:
+  dist_dir: "frontend/dist"
+  mount_frontend: true

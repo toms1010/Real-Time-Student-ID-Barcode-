@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Barcode">
+  <rect width="64" height="64" rx="10" fill="#123a5e" />
+  <g fill="#ffffff">
+    <rect x="10" y="18" width="3" height="28" />
+    <rect x="16" y="18" width="2" height="28" />
+    <rect x="22" y="18" width="4" height="28" />
+    <rect x="30" y="18" width="2" height="28" />
+    <rect x="36" y="18" width="3" height="28" />
+    <rect x="43" y="18" width="2" height="28" />
+    <rect x="49" y="18" width="4" height="28" />
+  </g>
+</svg>

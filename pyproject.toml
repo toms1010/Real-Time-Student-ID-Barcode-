@@ -1,0 +1,98 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "student-id-barcode-system"
+version = "1.0.0"
+description = "Real-Time Student ID Barcode Detection and Verification System for Linux desktops"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Student ID Barcode System Team" }]
+keywords = ["barcode", "opencv", "zxing", "fastapi", "sqlite", "student", "verification"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Web Environment",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: C++",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Education",
+]
+
+# Runtime dependencies are pinned in requirements.txt so that the documented
+# `pip install -r requirements.txt` flow stays authoritative and reviewable.
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "ruff==0.8.4",
+    "mypy==1.14.0",
+    "pytest==8.3.4",
+    "pytest-cov==6.0.0",
+]
+
+[project.scripts]
+sid-cli = "app.cli:main"
+
+[project.urls]
+Documentation = "https://github.com/your-org/student-id-barcode-system/tree/main/docs"
+
+[tool.setuptools]
+package-dir = { "" = "python" }
+
+[tool.setuptools.packages.find]
+where = ["python"]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["python/tests", "tests/integration"]
+pythonpath = ["python"]
+addopts = "-q --strict-markers --color=yes"
+markers = [
+    "integration: end-to-end tests that exercise the API and the database together",
+    "vision: tests that need a real barcode image (uses assets/test-barcodes)",
+    "performance: timing / benchmark tests, not part of the default correctness suite",
+    "hardware: tests that require a physical camera",
+]
+filterwarnings = [
+    "error::DeprecationWarning:app.*",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["python/app"]
+omit = ["*/tests/*", "*/migrations/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["python"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF"]
+ignore = ["E501", "B008", "SIM108"]
+
+[tool.ruff.lint.per-file-ignores]
+"python/tests/*" = ["E402"]
+"tests/*" = ["E402"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_unused_configs = true
+ignore_missing_imports = true
+namespace_packages = true
+mypy_path = "python"
+exclude = ["build", "frontend", "python/tests"]

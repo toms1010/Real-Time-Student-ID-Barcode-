@@ -1,0 +1,61 @@
+# ===========================================================================
+#  Logging configuration
+#
+#  Two mechanisms exist:
+#   1. python/app/utils/logger.py - the runtime configuration used by the
+#      FastAPI service and the CLI.  The values that matter (level, format,
+#      file) come from the `application:` section of config/config.yaml and
+#      from LOG_LEVEL / LOG_FORMAT in the environment.
+#   2. python/logging.yaml - this file, for anything that wants the standard
+#      Python `logging.config.dictConfig` schema (e.g. an external tool or a
+#      future service split).
+#
+#  Levels: DEBUG | INFO | WARNING | ERROR
+#  Formats: text (human readable) | json (one object per line)
+# ===========================================================================
+
+version: 1
+disable_existing_loggers: false
+
+formatters:
+  text:
+    format: "%(asctime)s %(levelname)-5s %(threadName)s [%(name)s] %(message)s"
+    datefmt: "%Y-%m-%d %H:%M:%S"
+  json:
+    format: '{"ts":"%(asctime)s","level":"%(levelname)s","logger":"%(name)s","thread":"%(threadName)s","message":"%(message)s"}'
+    datefmt: "%Y-%m-%dT%H:%M:%S"
+
+filters:
+  redact:
+    (): app.utils.logger.RedactingFilter
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: text
+    filters: [redact]
+    stream: ext://sys.stdout
+
+loggers:
+  app:
+    level: INFO
+    handlers: [console]
+    propagate: false
+  uvicorn:
+    level: WARNING
+    handlers: [console]
+    propagate: false
+  uvicorn.error:
+    level: INFO
+    handlers: [console]
+    propagate: false
+  # Access logging is disabled by default: a barcode scanner generates one
+  # request per scan, which floods the log.  Enable it for debugging.
+  uvicorn.access:
+    level: WARNING
+    handlers: [console]
+    propagate: false
+
+root:
+  level: INFO
+  handlers: [console]

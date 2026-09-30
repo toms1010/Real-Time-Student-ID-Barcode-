@@ -1,0 +1,86 @@
+# ---------------------------------------------------------------------------
+# Build artifacts
+# ---------------------------------------------------------------------------
+build/
+build-*/
+cmake-build-*/
+dist/
+*.o
+*.a
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+CMakeCache.txt
+CMakeFiles/
+_deps/
+compile_commands.json
+install_manifest.txt
+Testing/
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.tox/
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ---------------------------------------------------------------------------
+# Runtime data (databases, logs, generated reports, uploads)
+# ---------------------------------------------------------------------------
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+database/*.db
+logs/
+*.log
+reports/
+exports/
+uploads/
+backups/
+*.bak
+
+# ---------------------------------------------------------------------------
+# Secrets / local configuration
+# ---------------------------------------------------------------------------
+.env
+.env.local
+config/config.yaml
+config/config.local.yaml
+*.pem
+*.key
+secrets/
+
+# ---------------------------------------------------------------------------
+# Test / benchmark output
+# ---------------------------------------------------------------------------
+tests/results/
+tests/performance/results/
+benchmark-*.json
+benchmark-*.csv
+*.tsv
+
+# ---------------------------------------------------------------------------
+# Editors / OS
+# ---------------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
