@@ -49,6 +49,11 @@ frontend/.vite/
 database/*.db
 logs/
 *.log
+# Runtime state written by scripts/start.sh and scripts/stop.sh. The pid files
+# record a process id that is meaningless on any other machine, and committing
+# them makes every run show a spurious diff.
+run/
+*.pid
 reports/
 exports/
 uploads/
